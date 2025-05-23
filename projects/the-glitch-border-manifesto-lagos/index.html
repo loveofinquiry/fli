@@ -1,0 +1,179 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>For the Love of Inquiry 
+        </title>
+        <link rel="stylesheet" type="text/css" href="../../styles/clearstyle.css">
+        <link rel="stylesheet" type="text/css" href="../../styles/style.css">
+
+        <script>
+            let base_url = "/fli/"
+        </script>
+        <script src="../../scripts/script.js" defer></script>
+        
+    </head>
+    <body>
+        <main data-menu_open="false" data-pagetype="project">
+            
+            
+<button id="toggle-nav" aria-controls="menu" aria-expanded="false">
+    <label class="body-tnr">Menu</label>
+    
+<svg class="close-icon" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <line vector-effect="non-scaling-stroke" x1="0" x2="100" y1="0" y2="100"></line>
+    <line vector-effect="non-scaling-stroke" x1="0" x2="100" y1="100" y2="0"></line>
+</svg>
+
+</button>
+
+<nav id="menu" name="Menu" aria-hidden="true">
+    <div id="fly-path-wrapper">
+        <div id="fly-path-inner-wrapper">
+            <svg id="fly-path" viewbox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink" class="fly-line">
+                <defs>
+                    <polyline id="trace" points="0,0" stroke-width="0.15" stroke-linecap="round"></polyline>
+                    <mask id="mask"><use class="mask" xlink:href="#trace"/></mask>
+                </defs>
+                <use class="aggregate" xlink:href="#trace" mask="url(#mask)"/>
+            </svg>
+            
+<div id="fly">
+    <svg width="49" height="43" viewBox="0 0 49 43" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M27.4696 41.7864C27.4999 41.8206 27.5312 41.8541 27.5637 41.8871C28.3983 42.7348 29.632 42.8589 30.8095 42.5665C32.0015 42.2706 33.2608 41.528 34.3367 40.4373C35.4127 39.3466 36.1457 38.0695 36.4386 36.8603C36.7279 35.6658 36.6068 34.4138 35.7722 33.5661C35.4189 33.2073 34.9942 32.9781 34.5325 32.8553C34.7243 32.2836 34.8987 31.6928 35.0545 31.0851C35.7461 30.84 36.4382 30.5228 37.1211 30.1412C40.1548 28.4464 43.1213 25.4322 45.3393 21.5194C47.5573 17.6065 48.638 13.481 48.564 9.95456C48.4902 6.44322 47.2583 3.40191 44.7055 1.89735C42.1526 0.392781 38.9532 0.822519 35.9324 2.51007C33.9847 3.59814 32.0648 5.23004 30.3528 7.29442C28.7091 5.68222 26.803 4.75454 24.7731 4.74484C22.7361 4.7351 20.8305 5.65103 19.1948 7.25802C17.464 5.16919 15.5268 3.51292 13.5658 2.40318C10.5325 0.686692 7.32988 0.226352 4.78794 1.70657C2.246 3.18678 1.03645 6.21642 0.988456 9.72718C0.940253 13.253 2.0513 17.3891 4.2981 21.3232C6.5449 25.2574 9.5336 28.3001 12.5799 30.0239C13.277 30.4184 13.9831 30.7466 14.688 31.0001C14.8572 31.6421 15.047 32.2655 15.2558 32.8678C14.92 32.9977 14.6108 33.1929 14.3436 33.4637C13.5152 34.3034 13.4033 35.5543 13.7014 36.7517C14.0031 37.9637 14.7456 39.2478 15.8296 40.3489C16.9136 41.4499 18.1784 42.2045 19.3725 42.5118C20.5523 42.8155 21.7851 42.7032 22.6135 41.8634C23.3551 42.1295 24.124 42.2707 24.9109 42.2745C25.7921 42.2787 26.6487 42.1097 27.4696 41.7864ZM29.919 35.9502C28.9804 36.9017 28.3841 37.9757 28.1561 38.9168C27.9247 39.8726 28.0914 40.5701 28.4768 40.9615C28.8621 41.3529 29.5494 41.5228 30.4915 41.2889C31.4192 41.0585 32.4782 40.4545 33.4168 39.503C34.3555 38.5515 34.9518 37.4775 35.1797 36.5363C35.4112 35.5806 35.2444 34.883 34.8591 34.4917C34.4738 34.1003 33.7865 33.9304 32.8444 34.1643C31.9167 34.3947 30.8577 34.9987 29.919 35.9502ZM21.9992 38.8874C21.7644 37.944 21.1601 36.8643 20.2145 35.9038C19.2688 34.9433 18.2054 34.3291 17.2759 34.0899C16.3321 33.847 15.646 34.0103 15.2635 34.398C14.8811 34.7857 14.7194 35.4817 14.9579 36.4397C15.1928 37.383 15.797 38.4628 16.7426 39.4233C17.6883 40.3838 18.7518 40.998 19.6812 41.2372C20.6251 41.4801 21.3111 41.3168 21.6936 40.9291C22.0761 40.5414 22.2377 39.8454 21.9992 38.8874ZM23.8612 22.6706C23.9056 19.4213 22.8762 15.5185 20.7275 11.7561C18.5788 7.99368 15.7492 5.13921 12.9418 3.55055C10.1214 1.95452 7.43509 1.68698 5.44018 2.84865C3.44526 4.01032 2.32908 6.49214 2.28445 9.75651C2.24003 13.0058 3.26944 16.9086 5.41816 20.671C7.56687 24.4334 10.3965 27.2879 13.2039 28.8766C16.0243 30.4726 18.7106 30.7401 20.7055 29.5785C22.7004 28.4168 23.8166 25.935 23.8612 22.6706ZM28.8391 11.7949C26.7179 15.5369 25.7171 19.4299 25.7854 22.6798C25.854 25.9447 26.9884 28.4373 28.9919 29.6181C30.9955 30.7989 33.6799 30.557 36.4887 28.9879C39.2845 27.426 42.0933 24.5985 44.2144 20.8564C46.3356 17.1144 47.3364 13.2214 47.2681 9.9715C47.1995 6.70659 46.0651 4.21401 44.0616 3.03323C42.0581 1.85245 39.3736 2.09433 36.5648 3.66345C33.769 5.22533 30.9602 8.05285 28.8391 11.7949Z" fill="black"/>
+    </svg>
+</div>
+
+        </div>
+    </div>
+
+    
+        
+            <div class="nav-link-wrapper">
+                
+                
+                    
+                    
+
+                <a class="menu-link pantasia-large" href="/fli/">Home</a>
+            </div>
+        
+    
+        
+            <div class="nav-link-wrapper">
+                
+                
+                    
+                
+
+                <a class="menu-link pantasia-large" href="/fli/projects">Projects</a>
+            </div>
+        
+    
+        
+            <div class="nav-link-wrapper">
+                
+                
+                    
+                
+
+                <a class="menu-link pantasia-large" href="/fli/methods">Methods</a>
+            </div>
+        
+    
+        
+            <div class="nav-link-wrapper">
+                
+                
+                    
+                
+
+                <a class="menu-link pantasia-large" href="/fli/gallery">Gallery</a>
+            </div>
+        
+    
+        
+            <div class="nav-link-wrapper">
+                
+                
+                    
+                
+
+                <a class="menu-link pantasia-large" href="/fli/contact">Contact</a>
+            </div>
+        
+    
+
+</nav>
+
+
+            <article>
+                <header>
+                    <h1>
+                        <a href="/fli/">For the<br>Love of<br>Inquiry</a>
+                    </h1>
+                </header>
+                
+                
+                
+                    
+                    
+                    
+                    
+                
+                
+                    <h2 class="page-heading">The Glitch Border Manifesto - Lagos</h2>
+                
+                
+                    <div class="block project-metadata">
+                        <ul class="category-wrapper">
+                            
+                                
+                                    <li class="metadata event-type" data-item="workshop">
+                                        <span class="box">Workshop</span></li>
+                                
+                            
+
+                            
+                        </ul>
+                        
+                        
+                        
+                        
+                            <div class="metadata-wrapper">
+                                <em class="body-tnr">Location</em>
+                                <span class="body-tnr">Lagos, Nigeria</span>
+                            </div>
+                        
+                        
+                        
+                        
+                        
+                    </div>
+                
+
+                
+                    
+    
+
+                
+
+            </article>
+        </main>
+    </body>
+</html>
