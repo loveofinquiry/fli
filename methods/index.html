@@ -25,6 +25,10 @@
         <script>
             let base_url = "/"
         </script>
+        
+        
+        
+        <script src="../scripts/libs/pointatlength.js"></script>
         <script src="../scripts/script.js" defer></script>
         
     </head>
@@ -46,11 +50,7 @@
     <div id="fly-path-wrapper">
         <div id="fly-path-inner-wrapper">
             <svg id="fly-path" viewbox="0 0 100 100" xmlns:xlink="http://www.w3.org/1999/xlink" class="fly-line">
-                <defs>
-                    <polyline id="trace" points="0,0" stroke-width="0.15" stroke-linecap="round"></polyline>
-                    <mask id="mask"><use class="mask" xlink:href="#trace"/></mask>
-                </defs>
-                <use class="aggregate" xlink:href="#trace" mask="url(#mask)"/>
+                <polyline id="trace" points="0,0" stroke-width="0.15" stroke-linecap="round"></polyline>
             </svg>
             
 <div id="fly">
@@ -97,15 +97,6 @@
         
     
         
-            <div class="nav-link-wrapper">
-                
-                
-                    
-                
-
-                <a class="menu-link pantasia-large" href="/gallery">Gallery</a>
-            </div>
-        
     
         
             <div class="nav-link-wrapper">
@@ -137,6 +128,7 @@
                     
                 
                 
+                    
                     <h2 class="page-heading">Methods</h2>
                 
                 

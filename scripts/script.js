@@ -27,13 +27,17 @@ function init() {
     document.querySelectorAll(".nav-link-wrapper")
   );
 
-  // fly path setup
-  generate_fly_path();
-  render_fly_path();
-  buzz(false);
-  setTimeout(() => {
-    buzz();
-  }, 200);
+  if(dom.main.dataset.fly_loaded!=='true'){
+      // fly path setup
+      generate_fly_path();
+      render_fly_path();
+      buzz(false);
+      setTimeout(() => {
+        buzz();
+      }, 200);
+      dom.main.dataset.fly_loaded="true";
+  }
+  
 
   // type
   optical_align_headers();
@@ -150,7 +154,11 @@ function render_fly_path() {
   dom.flypath.setAttribute("viewBox", `0 0 100 ${svg_box_height}`);
 
   dom.polyline.setAttribute("points", polyline_points);
-  polyline_length = dom.polyline.getTotalLength();
+
+  path_length_lookup=getPathLengthLookup(dom.polyline);
+  polyline_length = path_length_lookup.totalLength;
+
+  
   full_duration = ms_per_unit * polyline_length;
   init_fly_position = 10 / polyline_length;
   flight.current.position = init_fly_position;
@@ -200,6 +208,8 @@ let full_duration = 10 * 1000;
 let ms_per_unit = 15;
 let init_fly_position = 0;
 
+let path_length_lookup;
+
 let full_distance = 1;
 let flight = {
   current: {
@@ -223,7 +233,7 @@ function buzz(v = true) {
   flight.start.position = flight.current.position;
   flight.distance = flight.end.position - flight.start.position;
   flight.duration = (flight.distance / full_distance) * full_duration;
-
+  
   position_fly();
 }
 
@@ -235,10 +245,10 @@ function position_fly() {
     flight.start.position + (elapsed / flight.duration) * flight.distance;
 
   // read point and render
-  let path_point = dom.polyline.getPointAtLength(
+  let path_point = path_length_lookup.getPointAtLength(
     polyline_length * flight.current.position
   );
-  let tangent_comparison = dom.polyline.getPointAtLength(
+  let tangent_comparison = path_length_lookup.getPointAtLength(
     polyline_length * (flight.current.position + 0.001)
   );
   let tangent_angle =
@@ -252,7 +262,7 @@ function position_fly() {
   dom.fly.style.setProperty("--buzz-y-absolute", path_point.y / 100);
   dom.flypath.style.setProperty(
     "--buzz",
-    polyline_length * flight.current.position
+    path_point.y / 100
   );
   if (flight.current.position < 0.999)
     dom.fly.style.setProperty("--buzz-direction", tangent_angle + "rad");
