@@ -231,15 +231,7 @@ em{
     display:block;
 }
 
-.block.image-wrapper{
-   
-    /* mix-blend-mode:multiply; */
-}
-
-.block.gallery {
-    /* mix-blend-mode:multiply; */
-}
-/* ,.block.gallery */
+/* .block.gallery , */
 .block.image-wrapper{
     z-index:1;
 }
@@ -274,8 +266,9 @@ em{
     --summed-margin:calc((var(--window-width) - var(--page-size)) / 2);
     width:calc(100% + var(--summed-margin) * 2);
     margin-left:calc(var(--summed-margin) * -1);
-    scroll-snap-type:x mandatory;
-    scroll-padding-left:var(--summed-margin);
+    /* scroll-snap-type:x mandatory;
+    scroll-padding-left:var(--summed-margin); */
+    scrollbar-width:none;
 }
 
 .block.gallery .item-wrapper::before,
@@ -338,6 +331,7 @@ svg.fly-line{
 #fly-path #trace{
     stroke:var(--color-pop);
     stroke-dasharray:1;
+    stroke-dashoffset:1.8;
     fill: none;
 }
 
@@ -349,22 +343,6 @@ svg.fly-line{
 .project-metadata ul.category-wrapper{
     margin-bottom:0.1rem;
 }
-
-
-/* #fly-path-wrapper.buzz{
-    & .mask{
-        stroke-dashoffset: 0;
-    }
-} */
-
-/* @keyframes buzz {
-    from {
-        stroke-dashoffset: var(--l);
-    }
-    to {
-        stroke-dashoffset: 0;
-    }
-} */
 
 #fly-path-wrapper{
     width:100%;
@@ -409,10 +387,15 @@ svg.fly-line{
     
     z-index:20;
     
-    & svg{
+    & svg,
+    & button{
         width:var(--s);
         height:var(--s);
         object-fit:contain;
+        pointer-events:all;
+    }
+
+    & button{
         transform:translate(-50%,-50%) rotate(var(--buzz-direction));
     }
 
@@ -532,8 +515,6 @@ main[data-menu_open="true"] nav{
 }
 
 
-
-
 @media(min-width:800px){
     :root{
         --fs-heading:30px;
@@ -635,6 +616,7 @@ main[data-menu_open="true"] nav{
         display:grid;
         --cols:12;
         grid-template-columns:repeat(var(--cols),1fr);
+        grid-auto-rows: min-content;
         /* 1/4 ratio */
         --row-height:calc(var(--page-size) / (var(--cols) * 4) );
         /* grid-template-rows:repeat(100,var(--row-height)); */
@@ -647,7 +629,7 @@ main[data-menu_open="true"] nav{
         /* grid-row:var(--start-y) / var(--end-y); */
         position:relative;
         z-index:10;
-        /* background-color: rgba(0,255,0,0.5); */
+        /* background-color:rgba(127, 255, 212, 0.5); */
     }
 
     nav .segment a{

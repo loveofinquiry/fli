@@ -1,40 +1,91 @@
 console.log(base_url);
 
-let nav_item_segments = [];
+window.onload = init;
 
-let dom = {};
+// dom variables defined in init ---------------------------
+// records dom nodes
+const dom = {};
+let desktop_breakpoint;
 
-// fly path related variables
-let fly_path = {
-  columns: 12,
-  points: [],
-};
+
+
+let fly_path=[];
+const fly_path_columns = 12;
+
+const stored_flight_y=access_flight_memory()?.at(-1)?.y ?? 0
 
 let polyline_length = 0;
 let svg_box_height = 100;
 
-window.onload = init;
+// animation timing variables ---------------
+let buzz_mode = false;
+let buzz_pos = 0;
+
+let full_duration = 10 * 1000;
+let ms_per_unit = 15;
+let init_fly_position = 0;
+
+let path_length_lookup;
+
+let full_distance = 1;
+let flight = {
+  current: {
+    position: 0,
+  },
+  start: {
+    position: 0,
+    time: 0,
+  },
+  end: {
+    position: 1,
+  },
+  duration: 1,
+  distance: 1,
+};
+
+// ---------------------------------
+
 
 function init() {
+  // main container element nodes
   dom.main = document.querySelector("main");
   dom.nav = dom.main.querySelector("nav");
   dom.article = dom.main.querySelector("article");
-  window.addEventListener("resize", handle_resize);
-  handle_resize();
-  document.querySelector("#toggle-nav").addEventListener("click", toggle_menu);
 
-  nav_item_segments = Array.from(
+  // fly path nodes
+  dom.fly = document.querySelector("#fly");
+  dom.flypath = document.querySelector("#fly-path");
+  dom.polyline = document.querySelector("#fly-path polyline");
+
+  // page links in nav
+  dom.nav_item_segments = Array.from(
     document.querySelectorAll(".nav-link-wrapper")
   );
 
+  // page size handling
+  window.addEventListener("resize", handle_resize);
+  handle_resize();
+
+  // event listener for nav
+  document.querySelector("#toggle-nav").addEventListener("click", toggle_menu);
+
+  desktop_breakpoint=window.matchMedia('(min-width:1000px)');
+  desktop_breakpoint.addEventListener('change',handle_breakpoint_change);
+ 
   if(dom.main.dataset.fly_loaded!=='true'){
+      console.log('stored_flight_y',stored_flight_y)
+
       // fly path setup
-      generate_fly_path();
-      render_fly_path();
+      fly_path=generate_fly_path();
+
+      render_fly_path(stored_flight_y ? 'end' : 'start');
       buzz(false);
-      setTimeout(() => {
-        buzz();
-      }, 200);
+      if(stored_flight_y==0 && desktop_breakpoint.matches){
+          setTimeout(() => {
+          buzz();
+        }, 200);
+      }
+      
       dom.main.dataset.fly_loaded="true";
   }
   
@@ -69,9 +120,11 @@ function toggle_menu() {
 }
 
 function handle_resize() {
-  // https://stackoverflow.com/a/57748743
-  console.log("calculate scrollbar-width");
-  let scrollbar_width =
+  // TK fly path handling
+
+  // scrollbar width logic
+  // https://stackoverflow.com/a/5774874
+  const scrollbar_width =
     window.innerWidth - document.documentElement.clientWidth;
   document.documentElement.style.setProperty(
     "--scrollbar-width",
@@ -79,60 +132,137 @@ function handle_resize() {
   );
 }
 
-function generate_fly_path() {
-  const page = {
-    // TODO:simplify and systematize this width logic
-    w: Math.min(1200,window.innerWidth) + 40,
-    h: document.documentElement.scrollHeight,
-  };
-  let row_height = page.w / fly_path.columns / 4;
-  const max_y = Math.ceil(page.h / row_height);
-  console.log("max_y", max_y, page.h);
-
-  dom.nav.style.setProperty("--cols", fly_path.columns);
-  fly_path.points.push({ x: fly_path.columns, y: 0 });
-  let min_distance = 4;
-  let min_segments = nav_item_segments.length + 1;
-  let forwards = false;
-
-  let keep_generating = (i) => {
-    return i < 1 || fly_path.points.at(-1).y < max_y || i < min_segments;
-  };
-
-  for (let i = 0; keep_generating(i); i++) {
-    let crosshair = { ...fly_path.points.at(-1) };
-    let space_before = forwards
-      ? []
-      : Math.max(0, crosshair.x - min_distance + 1);
-    let space_after = forwards
-      ? Math.max(0, fly_path.columns + 1 - (crosshair.x + min_distance))
-      : [];
-    let choices_for_x = [];
-    for (let i = 0; i < space_before; i++)
-      choices_for_x.push(crosshair.x - (min_distance + i));
-    for (let i = 0; i < space_after; i++)
-      choices_for_x.push(crosshair.x + (min_distance + i));
-    let x = choices_for_x[Math.floor(Math.random() * choices_for_x.length)];
-    let point = { x, y: crosshair.y + Math.abs(crosshair.x - x) };
-    fly_path.points.push(point);
-    forwards = !forwards;
-  }
+function handle_breakpoint_change(e){
+  const is_desktop=e.matches;
+  // need to reset fly_path to be appropriate to breakpoint
+  // if desktop, need to animate flight
+  // if mobile, need to set position to zero
 }
 
-function render_fly_path() {
-  const col = 100 / 12;
+/**
+ * Generate path segments needed based on presets and height of the page
+ */
+function generate_fly_path({is_desktop = true} = {}) {
+  const stored_fly_path=access_flight_memory();
+  console.log('stored_fly_path',stored_fly_path)
+
+  const new_fly_path=[];
+
+  // measure dimensions
+  const page = {
+    w: document.querySelector('nav').offsetWidth,
+    h: document.documentElement.scrollHeight,
+  };
+
+  // calculate vertical distance of smallest movement increment
+  const row_height = page.w / fly_path_columns / 4;
+
+  // at minimum, line should go far enough to underly all the links
+  const min_segments = dom.nav_item_segments.length + 1;
+
+  // calculate the maximum vertical distance (in segment increments) that can be added based on available height
+  const max_y = Math.ceil(page.h / row_height);
+
+  // pass column data to the page
+  dom.nav.style.setProperty("--cols", fly_path_columns);
+
+  // start in the top right corner with the menu button
+  new_fly_path.push({ x: fly_path_columns, y: 0 });
+
+  // minimum columns for a segment to traverse. 12 (full distance) on mobile.
+  const min_distance = is_desktop ? 4 : 12;
+
+  // sets the alternating direction of the segment: forwards=right, !forwards=left.
+  let forwards = false;
+
+  // “for” loop end logic. Checks if path satisfies min length conditions.
+  const keep_generating = (i) => {
+    return (i < 1) || (new_fly_path.at(-1).y < max_y) || (i < min_segments);
+  };
+
+  // loop to generate each point
+  for (let i = 0; keep_generating(i); i++) {
+    const stored_point=stored_fly_path[i+1];
+    if(stored_point){
+      new_fly_path.push({...stored_point})
+      continue;
+    }
+
+
+    // check where the path is currently
+    const crosshair = { ...new_fly_path.at(-1) };
+
+    // check how many columns are to the left of the current
+    const space_before = forwards
+      ? []
+      : Math.max(0, crosshair.x - min_distance + 1);
+
+    // check how many columns are to the right of the current
+    const space_after = forwards
+      ? Math.max(0, fly_path_columns + 1 - (crosshair.x + min_distance))
+      : [];
+
+    const choices_for_x = [];
+
+    // record all the possible choices on the left
+    for (let i = 0; i < space_before; i++)
+      choices_for_x.push(crosshair.x - (min_distance + i));
+    // do the same for the right
+    for (let i = 0; i < space_after; i++)
+      choices_for_x.push(crosshair.x + (min_distance + i));
+
+    // pick a new x at random from possible
+    const x = choices_for_x[Math.floor(Math.random() * choices_for_x.length)];
+
+    // set the y and create the point object
+    const point = { x, y: crosshair.y + Math.abs(crosshair.x - x) };
+
+    // add it to the points array
+    new_fly_path.push(point);
+
+    // alternate the flying direction
+    forwards = !forwards;
+  }
+
+  if(is_desktop&&new_fly_path.length>stored_fly_path.length){
+    console.log('recording to memory...')
+    access_flight_memory('set',new_fly_path);
+  }
+
+
+  return new_fly_path;
+}
+
+
+function access_flight_memory(action="get",data = []){
+  if(action=='set'){
+    localStorage.setItem("flight_in_memory",JSON.stringify(data));
+  }
+
+  return JSON.parse(localStorage.getItem('flight_in_memory')) ?? [];
+}
+
+/**
+ * Using fly path segments,
+ * render SVG polyline and set initial values
+ */
+function render_fly_path(placement = 'start') {
+  
+  // calculate column width as a percentage of x
+  const col = 100 / fly_path_columns;
+  // derive row height from column width.
   const row = col / 4;
 
   // generate svg polyline points from provided fly points
-  const polyline_points = fly_path.points
+  const polyline_points = fly_path
     .map((a, i) => {
       let x = a.x;
       let y = a.y;
 
       // on the last point, if it ends on an edge, leave a little space
       // so that the fly stays on screen
-      if (i == fly_path.points.length - 1) {
-        if (x == fly_path.columns) {
+      if (i == fly_path.length - 1) {
+        if (x == fly_path_columns) {
           // ends on right edge
           x -= 0.4;
           y -= 0.1;
@@ -147,127 +277,146 @@ function render_fly_path() {
     })
     .join(" ");
 
-  svg_box_height = fly_path.points.at(-1).y * row;
-  dom.polyline = document.querySelector("#fly-path polyline");
-  dom.fly = document.querySelector("#fly");
-  dom.flypath = document.querySelector("#fly-path");
+  // calculate svg height from last point position.
+  svg_box_height = fly_path.at(-1).y * row;
+
+  // set viewbox accordingly
   dom.flypath.setAttribute("viewBox", `0 0 100 ${svg_box_height}`);
 
+  // set path of polyline
   dom.polyline.setAttribute("points", polyline_points);
 
+  // read the path length (uses microlibrary for performance)
   path_length_lookup=getPathLengthLookup(dom.polyline);
   polyline_length = path_length_lookup.totalLength;
 
-  
+  // calculate the flight duration from distance (this may change)
   full_duration = ms_per_unit * polyline_length;
+
+  // position is a percentage, so we have to divide the absolute value by total length
+  // to set the contant initial position.
   init_fly_position = 10 / polyline_length;
-  flight.current.position = init_fly_position;
+  flight.current.position = placement == 'start' ? init_fly_position : 1;
   flight.end.position = 1;
 
+  // record line length in dom
   dom.flypath.style.setProperty("--l", polyline_length);
+
+  // record aspect ratio, which gets used by the CSS mask
   document
     .querySelector("#fly-path-wrapper")
     .style.setProperty("--h-w-ratio", svg_box_height / 100);
 
-  for (let i = 1; i < fly_path.points.length; i++) {
-    let item = nav_item_segments[i - 1];
-    let segment = generate_segment(
-      fly_path.points[i - 1],
-      fly_path.points[i],
+  // this adds stacked elements so that the height of the nav element matches the total path
+  // it also positions the page links with the path segments
+  for (let i = 1; i < fly_path.length; i++) {
+    // finds nav link for this segment if it exists
+    const item = dom.nav_item_segments[i - 1];
+    // function handles item positioning/generation
+    const segment = generate_segment(
+      fly_path[i - 1],
+      fly_path[i],
       item
     );
     segment.style.setProperty("--i", i);
   }
 }
 
+/**
+ * Generates dom element which corresponds with/matches the position of
+ * a segment in the fly path line
+ */
 function generate_segment(
   start = { x: 0, y: 0 },
   end = { x: 0, y: 0 },
   existing_node
 ) {
-  let x_sorted_ascending = [start.x, end.x].sort((a, b) => a - b);
-  let div = existing_node ? existing_node : document.createElement("div");
+  // sort x values to use for box height/position
+  const x_sorted_ascending = [start.x, end.x].sort((a, b) => a - b);
+
+  // if node passed in (for nav link), use that, otherwise create div
+  const div = existing_node ? existing_node : document.createElement("div");
+  // set positioning and props
   div.style.setProperty("--start-x", x_sorted_ascending[0] + 1);
   div.style.setProperty("--end-x", x_sorted_ascending[1] + 1);
   div.style.setProperty("--start-y", start.y + 1);
   div.style.setProperty("--end-y", end.y + 1);
   div.classList.add("segment");
-
   div.dataset.direction = start.x < end.x ? "right" : "left";
 
+  // add to dom if new
   if (!existing_node) dom.nav.appendChild(div);
 
   return div;
 }
 
-// animation timing variables
-let buzz_mode = false;
-let buzz_pos = 0;
 
-let full_duration = 10 * 1000;
-let ms_per_unit = 15;
-let init_fly_position = 0;
-
-let path_length_lookup;
-
-let full_distance = 1;
-let flight = {
-  current: {
-    position: 0,
-  },
-  start: {
-    position: 0,
-    time: 0,
-  },
-  end: {
-    position: 1,
-  },
-  duration: 1,
-  distance: 1,
-};
-
+/**
+ * Sets fly path to starting state
+ * and begins animation if desired
+ */
 function buzz(v = true) {
+  // if v=true, animates
+  // else, just sets position once
   buzz_mode = v;
-  document.querySelector("#fly-path-wrapper").classList.toggle("buzz", v);
+
+  // recording initial state and time
   flight.start.time = performance.now();
   flight.start.position = flight.current.position;
   flight.distance = flight.end.position - flight.start.position;
   flight.duration = (flight.distance / full_distance) * full_duration;
   
-  position_fly();
+  // go!
+  requestAnimationFrame(position_fly);
 }
 
+/**
+ * Self-looping animation frame for fly buzz
+ */
 function position_fly() {
-  // animation timing logic
-  let now = performance.now();
-  let elapsed = now - flight.start.time;
-  flight.current.position =
-    flight.start.position + (elapsed / flight.duration) * flight.distance;
-
-  // read point and render
-  let path_point = path_length_lookup.getPointAtLength(
+  // calculate progress based on time from start
+  const now = performance.now();
+  const elapsed = now - flight.start.time;
+  if(flight.duration && flight.distance){
+    flight.current.position =
+      flight.start.position + (elapsed / flight.duration) * flight.distance;
+  };
+  
+  // read point position for the current progress
+  const path_point = path_length_lookup.getPointAtLength(
     polyline_length * flight.current.position
   );
-  let tangent_comparison = path_length_lookup.getPointAtLength(
-    polyline_length * (flight.current.position + 0.001)
+  // check a nearby second point so we can get the tangent
+  const tangent_comparison = path_length_lookup.getPointAtLength(
+    polyline_length * (flight.current.position - 0.001)
   );
-  let tangent_angle =
+
+  // determine the angle to position fly correctly
+  const tangent_angle =
     Math.atan2(
       tangent_comparison.y - path_point.y,
       tangent_comparison.x - path_point.x
     ) -
-    Math.PI / 2;
+    Math.PI * -0.5;
 
+  // set fly position and from measured path values
   dom.fly.style.setProperty("--buzz-x-absolute", path_point.x / 100);
   dom.fly.style.setProperty("--buzz-y-absolute", path_point.y / 100);
+
+  // sets mask size to show portion of path for this point
   dom.flypath.style.setProperty(
     "--buzz",
     path_point.y / 100
   );
-  if (flight.current.position < 0.999)
+
+  // use the tangent to set the angle of the fly
+  if (flight.current.position > 0)
     dom.fly.style.setProperty("--buzz-direction", tangent_angle + "rad");
 
+  // calls next frame when animation is still going.
   if (buzz_mode && elapsed < flight.duration) {
     requestAnimationFrame(position_fly);
+  }else{
+    buzz_mode=false;
   }
 }

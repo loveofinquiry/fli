@@ -18,8 +18,8 @@ function projects_init(){
         filter.addEventListener('change',refresh_projects_filter)
     }
 
-    document.querySelector('#clear-filters').addEventListener('click',clear_filters)
-    document.querySelector('#filters summary').addEventListener('click',clear_filters)
+    // TK re-implement this somehow?
+    // document.querySelector('#clear-filters').addEventListener('click',clear_filters)
 
 }
 
