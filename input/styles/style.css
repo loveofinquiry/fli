@@ -325,16 +325,15 @@ svg.fly-line{
     }
 }
 
-/* stroke-width:0.15;
-stroke-dasharray:1;
-        stroke-dashoffset:1.8; */
-
 #fly-path #trace{
-    --stroke-width:0.6;
+    --stroke-width:0.6px;
     stroke-width:var(--stroke-width);
-    stroke:var(--color-pop);
     stroke-dasharray:calc(var(--stroke-width) * 6.7);
     stroke-dashoffset:calc(var(--stroke-width) * 12);
+
+
+    stroke:var(--color-pop);
+    
     fill: none;
 }
 
@@ -659,7 +658,7 @@ nav{
 
 
     #fly-path #trace{
-        --stroke-width:0.15;
+        --stroke-width:0.15px;
     }
         
 

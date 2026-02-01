@@ -11,6 +11,7 @@ let desktop_breakpoint;
 
 let fly_path=[];
 const fly_path_columns = 12;
+const use_flight_memory=true;
 
 const stored_flight_y=access_flight_memory()?.at(-1)?.y ?? 0
 
@@ -260,7 +261,9 @@ function access_flight_memory(action="get",data = []){
     localStorage.setItem("flight_in_memory",JSON.stringify(data));
   }
 
-  return JSON.parse(localStorage.getItem('flight_in_memory')) ?? [];
+  const flight_memory=JSON.parse(localStorage.getItem('flight_in_memory'));
+
+  return use_flight_memory?(flight_memory || []):[];
 }
 
 /**
