@@ -73,13 +73,15 @@ function init() {
   desktop_breakpoint.addEventListener('change',handle_breakpoint_change);
  
   if(dom.main.dataset.fly_loaded!=='true'){
-      console.log('stored_flight_y',stored_flight_y)
+      const is_desktop=desktop_breakpoint.matches;
 
       // fly path setup
-      fly_path=generate_fly_path();
+      fly_path=generate_fly_path({is_desktop});
 
-      render_fly_path(stored_flight_y ? 'end' : 'start');
-      buzz(false);
+      console.log('is_desktop',is_desktop,stored_flight_y && is_desktop ? 'end' : 'start');
+
+      render_fly_path(stored_flight_y && is_desktop ? 'end' : 'start');
+
       if(stored_flight_y==0 && desktop_breakpoint.matches){
           setTimeout(() => {
           buzz();
@@ -128,31 +130,50 @@ function handle_resize() {
     window.innerWidth - document.documentElement.clientWidth;
   document.documentElement.style.setProperty(
     "--scrollbar-width",
-    scrollbar_width + "px"
+    ( window.innerWidth>450 ? scrollbar_width: 0) + "px"
   );
 }
 
 function handle_breakpoint_change(e){
-  const is_desktop=e.matches;
-  // need to reset fly_path to be appropriate to breakpoint
-  // if desktop, need to animate flight
-  // if mobile, need to set position to zero
+  document.querySelectorAll('.segment:not(.nav-link-wrapper)').forEach((segment)=>{
+    segment.remove();
+  })
+
+  requestAnimationFrame(()=>{
+    const is_desktop=e.matches;
+    // need to reset fly_path to be appropriate to breakpoint
+
+    fly_path=generate_fly_path({is_desktop});
+
+    if(fly_path.length>0){
+      // set the fly to its start point regardless
+      render_fly_path('start');
+    }
+
+    // if desktop, animate it
+    if(is_desktop){
+      buzz();
+    }
+  })
+  
 }
 
 /**
  * Generate path segments needed based on presets and height of the page
  */
 function generate_fly_path({is_desktop = true} = {}) {
-  const stored_fly_path=access_flight_memory();
-  console.log('stored_fly_path',stored_fly_path)
+  const stored_fly_path=is_desktop ? access_flight_memory(): [];
 
   const new_fly_path=[];
 
   // measure dimensions
   const page = {
-    w: document.querySelector('nav').offsetWidth,
-    h: document.documentElement.scrollHeight,
+    w: dom.nav.offsetWidth,
+    h: dom.main.offsetHeight
+    // h: document.documentElement.scrollHeight,
   };
+
+  console.log('page',page)
 
   // calculate vertical distance of smallest movement increment
   const row_height = page.w / fly_path_columns / 4;
@@ -295,7 +316,7 @@ function render_fly_path(placement = 'start') {
 
   // position is a percentage, so we have to divide the absolute value by total length
   // to set the contant initial position.
-  init_fly_position = 10 / polyline_length;
+  init_fly_position = desktop_breakpoint.matches ? 10 / polyline_length : 0.006;
   flight.current.position = placement == 'start' ? init_fly_position : 1;
   flight.end.position = 1;
 
@@ -320,6 +341,8 @@ function render_fly_path(placement = 'start') {
     );
     segment.style.setProperty("--i", i);
   }
+
+  buzz(false);
 }
 
 /**
