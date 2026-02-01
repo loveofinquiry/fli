@@ -11,7 +11,7 @@ let desktop_breakpoint;
 
 let fly_path=[];
 const fly_path_columns = 12;
-const use_flight_memory=true;
+const use_flight_memory=false;
 
 const stored_flight_y=access_flight_memory()?.at(-1)?.y ?? 0
 
@@ -22,6 +22,7 @@ let svg_box_height = 100;
 let buzz_mode = false;
 let buzz_pos = 0;
 
+// 10 second starting duration, set by distance in render_fly_path
 let full_duration = 10 * 1000;
 let ms_per_unit = 15;
 let init_fly_position = 0;
@@ -84,6 +85,7 @@ function init() {
       render_fly_path(stored_flight_y && is_desktop ? 'end' : 'start');
 
       if(stored_flight_y==0 && desktop_breakpoint.matches){
+        flight.end.position=1;
           setTimeout(() => {
           buzz();
         }, 200);
@@ -119,7 +121,17 @@ function toggle_menu() {
   dom.nav.setAttribute("aria-hidden", !open);
   dom.article.setAttribute("aria-hidden", open);
 
-  flight.end.position = open ? init_fly_position : 1;
+  // flight.end.position = open ? init_fly_position : 1;
+
+  if(!desktop_breakpoint.matches){
+
+    flight.end.position = open ? 0.99 : init_fly_position;
+    // animate if open, just flip if not
+    setTimeout(()=>{
+      buzz(open);
+    },open?150:0);
+    
+  }
 }
 
 function handle_resize() {
@@ -199,7 +211,7 @@ function generate_fly_path({is_desktop = true} = {}) {
 
   // “for” loop end logic. Checks if path satisfies min length conditions.
   const keep_generating = (i) => {
-    return (i < 1) || (new_fly_path.at(-1).y < max_y) || (i < min_segments);
+    return is_desktop?(i < 1) || (new_fly_path.at(-1).y < max_y) || (i < min_segments):i<min_segments;
   };
 
   // loop to generate each point
@@ -315,13 +327,14 @@ function render_fly_path(placement = 'start') {
   polyline_length = path_length_lookup.totalLength;
 
   // calculate the flight duration from distance (this may change)
-  full_duration = ms_per_unit * polyline_length;
+  full_duration = desktop_breakpoint.matches?ms_per_unit * polyline_length:fly_path.length*150;
 
   // position is a percentage, so we have to divide the absolute value by total length
   // to set the contant initial position.
-  init_fly_position = desktop_breakpoint.matches ? 10 / polyline_length : 0.006;
+  // init_fly_position = desktop_breakpoint.matches ? 10 / polyline_length : 0.006;
+  init_fly_position = (desktop_breakpoint.matches?10:15) / polyline_length;
   flight.current.position = placement == 'start' ? init_fly_position : 1;
-  flight.end.position = 1;
+  flight.end.position = flight.current.position;
 
   // record line length in dom
   dom.flypath.style.setProperty("--l", polyline_length);
@@ -402,7 +415,8 @@ function buzz(v = true) {
 function position_fly() {
   // calculate progress based on time from start
   const now = performance.now();
-  const elapsed = now - flight.start.time;
+  const elapsed = buzz_mode ? now - flight.start.time: flight.duration;
+  // if(!buzz_mode) console.log('elapsed',elapsed);
   if(flight.duration && flight.distance){
     flight.current.position =
       flight.start.position + (elapsed / flight.duration) * flight.distance;
@@ -414,7 +428,7 @@ function position_fly() {
   );
   // check a nearby second point so we can get the tangent
   const tangent_comparison = path_length_lookup.getPointAtLength(
-    polyline_length * (flight.current.position - 0.001)
+    polyline_length * (Math.min(1,flight.current.position) - 0.001)
   );
 
   // determine the angle to position fly correctly

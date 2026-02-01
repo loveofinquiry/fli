@@ -300,7 +300,7 @@ em{
 }
 
 .close-icon{
-    width:2.8rem;
+    width:2.4rem;
     aspect-ratio:4;
     pointer-events:none;
     overflow:visible;
@@ -326,9 +326,10 @@ svg.fly-line{
 }
 
 #fly-path #trace{
-    --stroke-width:0.6px;
+    /* 100px / 100vw */
+    --stroke-width:calc(2 * (100px / var(--page-size)));
     stroke-width:var(--stroke-width);
-    stroke-dasharray:calc(var(--stroke-width) * 6.7);
+    stroke-dasharray:calc(var(--stroke-width) * 12);
     stroke-dashoffset:calc(var(--stroke-width) * 12);
 
 
@@ -518,8 +519,15 @@ main[data-menu_open="true"] nav{
     
     & .segment a{
         transition: opacity 0s;
-        transition-delay:calc(var(--i) * 0.1s);
+        --segment-duration:0.15s;
+        --starting-delay:0.3s;
+        transition-delay:calc(var(--starting-delay) + var(--i) * var(--segment-duration));
         opacity:1;
+
+        @media(min-width:800px){
+            --starting-delay:0s;
+            --segment-duration:0.1s;
+        }
     }
 }
 
@@ -543,7 +551,11 @@ nav{
 
     nav .segment a{
         position:absolute;
-        bottom:0;
+        bottom: 5px;
+
+        @media(min-width:800px){
+            bottom:0;
+        }
         
     }
     nav .segment[data-direction="left"] a{
@@ -566,6 +578,10 @@ nav{
         --fs-heading:30px;
         --fs-body:24px;
         --fs-caption:12px;
+    }
+
+    #close-icon{
+        width:2.8rem;
     }
 }
 
@@ -659,6 +675,8 @@ nav{
 
     #fly-path #trace{
         --stroke-width:0.15px;
+        stroke-dasharray:calc(var(--stroke-width) * 6.7);
+        stroke-dashoffset:calc(var(--stroke-width) * 12);
     }
         
 
