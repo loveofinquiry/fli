@@ -65,8 +65,8 @@ module.exports = function(eleventyConfig) {
         // if months are different, do month - month year
         return `${start_ymd.month} — ${end_ymd.month} ${start_ymd.year}`;
       }else if (end_ymd.day !== start_ymd.day){
-        // if days are different, do month day-day, 2024
-        return `${start_ymd.month} ${start_ymd.day} — ${end_ymd.day}`;
+        // if days are different, do month day-day, year
+        return `${start_ymd.month} ${start_ymd.day} — ${end_ymd.day}, ${start_ymd.year}`;
       }else{
         return format_single_day(start_ymd);
       }
