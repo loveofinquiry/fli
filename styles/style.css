@@ -318,10 +318,7 @@ svg.fly-line{
     overflow:visible;
 
     & line,
-    & polyline{
-        stroke-width:2px;
-        stroke-width:0.15;
-        
+    & polyline{        
         stroke-linecap: round;
         stroke-linejoin: round;
         fill:none;
@@ -329,9 +326,14 @@ svg.fly-line{
 }
 
 #fly-path #trace{
+    --stroke-width:0.6px;
+    stroke-width:var(--stroke-width);
+    stroke-dasharray:calc(var(--stroke-width) * 6.7);
+    stroke-dashoffset:calc(var(--stroke-width) * 12);
+
+
     stroke:var(--color-pop);
-    stroke-dasharray:1;
-    stroke-dashoffset:1.8;
+    
     fill: none;
 }
 
@@ -504,6 +506,13 @@ main[data-menu_open="true"] article>*:not(header){
     pointer-events:none;
 }
 
+@media(max-width:999px){
+    main[data-menu_open="true"] header{
+        opacity:0;
+        pointer-events:none;
+    }
+}
+
 main[data-menu_open="true"] nav{
     pointer-events:all;
     
@@ -513,6 +522,43 @@ main[data-menu_open="true"] nav{
         opacity:1;
     }
 }
+
+
+nav{
+        display:grid;
+        --cols:12;
+        grid-template-columns:repeat(var(--cols),1fr);
+        grid-auto-rows: min-content;
+        /* 1/4 ratio */
+        --row-height:calc(var(--page-size) / (var(--cols) * 4) );
+        /* grid-template-rows:repeat(100,var(--row-height)); */
+    }
+
+    nav .segment{
+        grid-column:var(--start-x) / var(--end-x);
+        height:calc((var(--end-y) - var(--start-y)) * var(--row-height));
+        position:relative;
+        z-index:10;
+    }
+
+    nav .segment a{
+        position:absolute;
+        bottom:0;
+        
+    }
+    nav .segment[data-direction="left"] a{
+        left:0;
+        transform:skew(0,var(--skew));
+        transform-origin:0% 100%;
+    }
+
+    nav .segment[data-direction="right"] a{
+        left:auto;
+        right:0;
+        transform:skew(0,calc(-1 * var(--skew)));
+        transform-origin:100% 100%;
+    }
+
 
 
 @media(min-width:800px){
@@ -610,51 +656,11 @@ main[data-menu_open="true"] nav{
         
     }
 
-    
 
-    nav{
-        display:grid;
-        --cols:12;
-        grid-template-columns:repeat(var(--cols),1fr);
-        grid-auto-rows: min-content;
-        /* 1/4 ratio */
-        --row-height:calc(var(--page-size) / (var(--cols) * 4) );
-        /* grid-template-rows:repeat(100,var(--row-height)); */
+    #fly-path #trace{
+        --stroke-width:0.15px;
     }
-
-    nav .segment{
-        /* outline:1px solid red; */
-        grid-column:var(--start-x) / var(--end-x);
-        height:calc((var(--end-y) - var(--start-y)) * var(--row-height));
-        /* grid-row:var(--start-y) / var(--end-y); */
-        position:relative;
-        z-index:10;
-        /* background-color:rgba(127, 255, 212, 0.5); */
-    }
-
-    nav .segment a{
-        position:absolute;
-        bottom:0;
         
-    }
-    nav .segment[data-direction="left"] a{
-        left:0;
-        transform:skew(0,var(--skew));
-        transform-origin:0% 100%;
-    }
-
-    nav .segment[data-direction="right"] a{
-        left:auto;
-        right:0;
-        transform:skew(0,calc(-1 * var(--skew)));
-        transform-origin:100% 100%;
-    }
-
-   
-    
-    
-
-    
 
     
 
