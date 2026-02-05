@@ -11,7 +11,7 @@ let desktop_breakpoint;
 
 let fly_path=[];
 const fly_path_columns = 12;
-const use_flight_memory=false;
+const use_flight_memory=true;
 
 const stored_flight_y=access_flight_memory()?.at(-1)?.y ?? 0
 
