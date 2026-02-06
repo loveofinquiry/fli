@@ -80,7 +80,6 @@ function init() {
       // fly path setup
       fly_path=generate_fly_path({is_desktop});
 
-      console.log('is_desktop',is_desktop,stored_flight_y && is_desktop ? 'end' : 'start');
 
       render_fly_path(stored_flight_y && is_desktop ? 'end' : 'start');
 
@@ -218,7 +217,8 @@ function generate_fly_path({is_desktop = true} = {}) {
   for (let i = 0; keep_generating(i); i++) {
     const stored_point=stored_fly_path[i+1];
     if(stored_point){
-      new_fly_path.push({...stored_point})
+      console.log('stored_point',stored_point)
+      save_to_new_path({...stored_point});
       continue;
     }
 
@@ -248,15 +248,28 @@ function generate_fly_path({is_desktop = true} = {}) {
     // pick a new x at random from possible
     const x = choices_for_x[Math.floor(Math.random() * choices_for_x.length)];
 
+    console.log({choices_for_x,x,crosshair,min_distance,space_before,space_after})
+
     // set the y and create the point object
     const point = { x, y: crosshair.y + Math.abs(crosshair.x - x) };
 
-    // add it to the points array
-    new_fly_path.push(point);
+    
+    save_to_new_path(point);
+    
 
-    // alternate the flying direction
-    forwards = !forwards;
+    function save_to_new_path(point){
+      if(typeof point.x == 'number' && typeof point.y == 'number'){
+        // add it to the points array
+        new_fly_path.push(point);
+
+        // alternate the flying direction
+        forwards = !forwards;
+      }
+    }
   }
+
+  console.log('new_fly_path',new_fly_path)
+
 
   if(is_desktop&&new_fly_path.length>stored_fly_path.length){
     console.log('recording to memory...')
