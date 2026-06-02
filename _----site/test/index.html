@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOUND BANK -  Sonic Futures Ochestra</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,400&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0a0612;
+    --bg-1: #160a26;
+    --ink: #f4ecdf;
+    --ink-dim: rgba(244, 236, 223, 0.55);
+    --accent: #ff9c6b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 30% 20%, var(--bg-1) 0%, var(--bg-0) 60%);
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    cursor: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+
+  #canvas-host {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    touch-action: none; /* allow custom touch handling without page scroll/zoom */
+  }
+
+  canvas { display: block; }
+
+  .frame {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    padding: clamp(20px, 4vw, 48px);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .top, .bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+
+  .badge .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 8px;
+    vertical-align: middle;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+
+  .badge.error .dot { background: #ff4757; }
+  .badge.success .dot { background: #4ec9b0; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.4); }
+  }
+
+  .title {
+    font-size: clamp(48px, 12vw, 160px);
+    font-weight: 300;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    font-variation-settings: "opsz" 144;
+  }
+
+  .title em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  .subtitle {
+    max-width: 32ch;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-dim);
+    margin-top: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+  }
+
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    text-align: right;
+  }
+
+  .meta div + div { margin-top: 6px; }
+
+  /* control button — re-center the scene */
+  .control-btn {
+    pointer-events: auto;
+    background: transparent;
+    border: 1px solid var(--ink-dim);
+    color: var(--ink-dim);
+    padding: 9px 14px;
+    font: 300 10px/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+    background: rgba(244, 236, 223, 0.05);
+  }
+  .control-btn .glyph {
+    font-size: 13px;
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  /* error toast */
+  .error-toast {
+    pointer-events: auto;
+    margin-top: 20px;
+    max-width: 380px;
+    padding: 14px 16px;
+    background: rgba(255, 71, 87, 0.08);
+    border: 1px solid rgba(255, 71, 87, 0.25);
+    color: var(--ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    display: none;
+  }
+  .error-toast.show { display: block; }
+  .error-toast b { color: #ff4757; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+  .error-toast button {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid var(--ink-dim);
+    color: var(--ink);
+    padding: 6px 12px;
+    font: inherit;
+    cursor: pointer;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .error-toast button:hover { border-color: var(--ink); }
+
+  /* zoom overlay */
+  .zoom-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    background: #000;
+  }
+
+  /* custom cursor */
+  .cursor {
+    position: fixed;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    transform: translate(-50%, -50%);
+    transition: width 0.25s cubic-bezier(.2,.8,.2,1), height 0.25s cubic-bezier(.2,.8,.2,1), border-color 0.25s, background-color 0.25s, opacity 0.3s;
+    mix-blend-mode: difference;
+  }
+
+  .cursor.hover {
+    width: 56px;
+    height: 56px;
+    background: rgba(244, 236, 223, 0.1);
+  }
+
+  .cursor.grabbing {
+    width: 18px;
+    height: 18px;
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* tooltip */
+  .tooltip {
+    position: fixed;
+    z-index: 99;
+    pointer-events: none;
+    transform: translate(-50%, calc(-100% - 32px));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: rgba(10, 6, 18, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 10px 14px;
+    border: 1px solid rgba(244, 236, 223, 0.15);
+    white-space: nowrap;
+    text-align: center;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .label { color: var(--ink); font-weight: 500; }
+  .tooltip .url {
+    display: block;
+    margin-top: 4px;
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 0.1em;
+    text-transform: none;
+  }
+
+  /* mobile crosshair — fixed reticle at screen center; circles are dragged
+     past it via camera rotation. Hidden on desktop where the cursor handles
+     the same role. */
+  .crosshair {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 90;
+    color: var(--ink);
+    opacity: 0.75;
+    mix-blend-mode: difference;
+  }
+  .crosshair::before,
+  .crosshair::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+  }
+  .crosshair::before {
+    top: 50%; left: 0; right: 0; height: 1px;
+    transform: translateY(-50%);
+  }
+  .crosshair::after {
+    left: 50%; top: 0; bottom: 0; width: 1px;
+    transform: translateX(-50%);
+  }
+
+  @media (max-width: 600px) {
+    .cursor { display: none; }
+    html, body { cursor: default; }
+    .subtitle { display: none; }
+    .crosshair { display: block; }
+    /* Anchor the tooltip below the crosshair instead of following the finger.
+       !important is needed because updatePointer writes inline left/top. */
+    .tooltip {
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, 28px) !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div id="canvas-host"></div>
+
+  <div class="frame">
+    <div class="top">
+      <div>
+        <div class="badge" id="status-badge"><span class="dot"></span><span id="status-text">Fetching data…</span></div>
+        <h1 class="title">SFO<em>.</em></h1>
+        <p class="subtitle">Sonic Futures Orchestra (SFO) is a participatory worldbuilding workshop that uses sonic material to explore and facilitate critical dialogue around Western classical music.</p>
+        <div class="error-toast" id="error-toast">
+          <b id="error-title">Could not reach spreadsheet</b>
+          <div id="error-msg" style="margin-top: 6px; color: var(--ink-dim);"></div>
+          <button id="retry-btn">Retry</button>
+        </div>
+      </div>
+      <div class="meta">
+        <div id="tab">tab: —</div>
+        <div id="count">— items</div>
+        <div id="fps">— fps</div>
+        <div id="dim">— viewport</div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="badge">three.js · webgl · live data</div>
+      <div style="display: flex; gap: 16px; align-items: center;">
+        <button class="control-btn" id="center-btn" title="Frame all nodes in view">
+          <span class="glyph">⊙</span>center view
+        </button>
+        <div class="badge">2026 / responsive</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="crosshair" id="crosshair" aria-hidden="true"></div>
+  <div class="zoom-overlay" id="zoom-overlay"></div>
+  <div class="tooltip" id="tooltip">
+    <span class="label" id="tooltip-label"></span>
+    <span class="url" id="tooltip-url"></span>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.min.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // ─── CONFIG ───────────────────────────────────────────────────
+    // Google Apps Script endpoint (returns JSONP). Page-reload re-fetches.
+    const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwuaRbGpRmteigiQjwB-9r-GKJ6lz2eJP6X2ZlIWiQZhlxySv4uUQMLk2ZjPyPMD4D_VA/exec';
+
+    // Name of the tab (sheet) inside your spreadsheet to read.
+    // Default 'Sheet1' — override at runtime by appending ?tab=YourTabName
+    // to the URL (no code edit needed when testing different tabs).
+    const TAB_NAME = new URLSearchParams(location.search).get('tab') || 'Sheet1';
+
+    // If a row has no URL column, navigation goes to BASE_URL + encoded(ID).
+    // Use '#' to keep clicks on-page while you're wiring things up.
+    const BASE_URL = '#';
+
+    // Open destination links in a new tab?
+    const OPEN_IN_NEW_TAB = true;
+
+    // Color palette — circles cycle through these unless the row provides
+    // its own `Color` column (e.g. "#ff9c6b" or "ff9c6b").
+    const PALETTE = [
+      0xff9c6b, 0xf2d479, 0xe85d75, 0x8a6cf0, 0x4ec9b0,
+      0xc4b5fd, 0xfb7185, 0x5eead4, 0xfcd34d, 0xf4ecdf,
+    ];
+
+    // ─── scene setup ──────────────────────────────────────────────
+    const host = document.getElementById('canvas-host');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0a0612, 0.025);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.z = 28;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    host.appendChild(renderer.domElement);
+
+    // ─── circle geometry & material ───────────────────────────────
+    const circleGeom = new THREE.CircleGeometry(1, 64);
+
+    function makeCircleMaterial(colorHex) {
+      const color = new THREE.Color(colorHex);
+      return new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: color }, uHover: { value: 0 } },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uColor;
+          uniform float uHover;
+          varying vec2 vUv;
+          void main() {
+            vec2 p = vUv - 0.5;
+            float d = length(p) * 2.0;
+            float core = smoothstep(0.55, 0.0, d);
+            float ring = smoothstep(0.52, 0.48, d) - smoothstep(0.48, 0.42, d);
+            float halo = smoothstep(0.95, 0.55, d) * uHover * 0.5;
+            float alpha = max(max(core * 0.95, ring * 0.6), halo);
+            if (alpha < 0.01) discard;
+            vec3 col = mix(uColor * 1.15, uColor * 0.7, d);
+            col = mix(col, uColor * 1.6, uHover * 0.6);
+            gl_FragColor = vec4(col, alpha);
+          }
+        `,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      });
+    }
+
+    // ─── data fetching: JSONP + TSV parsing ───────────────────────
+    // The Apps Script returns its content wrapped in a callback function
+    // (JSONP). Inside that, the payload is JSON-encoded TSV text:
+    //   "ID\tName\tURL\nrow1id\trow1name\trow1url\n..."
+    // JSONP is loaded via <script> tag — avoids CORS issues entirely.
+    function jsonp(url, callbackParam) {
+      callbackParam = callbackParam || 'callback';
+      return new Promise((resolve, reject) => {
+        const cbName = '_jsonp_' + Math.random().toString(36).slice(2) + Date.now();
+        const script = document.createElement('script');
+        let timeoutId;
+
+        const cleanup = () => {
+          try { delete window[cbName]; } catch (e) { window[cbName] = undefined; }
+          if (script.parentNode) script.parentNode.removeChild(script);
+          if (timeoutId) clearTimeout(timeoutId);
+        };
+
+        window[cbName] = (data) => { cleanup(); resolve(data); };
+        script.onerror = () => { cleanup(); reject(new Error('Script failed to load — check that the Apps Script is deployed and accessible to "Anyone".')); };
+        timeoutId = setTimeout(() => { cleanup(); reject(new Error('Request timed out after 15s')); }, 15000);
+
+        const sep = url.includes('?') ? '&' : '?';
+        script.src = url + sep + callbackParam + '=' + encodeURIComponent(cbName);
+        document.head.appendChild(script);
+      });
+    }
+
+    function parseTSV(content) {
+      if (typeof content !== 'string') {
+        throw new Error('Unexpected response type from script: ' + typeof content);
+      }
+      if (content.startsWith('ERROR:')) {
+        throw new Error(content + ' — check that TAB_NAME matches a tab in the spreadsheet.');
+      }
+      const lines = content.split('\n').filter(l => l.length > 0);
+      if (lines.length === 0) return [];
+      const headers = lines[0].split('\t').map(h => h.trim());
+      return lines.slice(1)
+        .map(line => {
+          const cells = line.split('\t');
+          const obj = {};
+          headers.forEach((h, i) => { obj[h] = (cells[i] !== undefined ? String(cells[i]) : '').trim(); });
+          return obj;
+        })
+        .filter(row => Object.values(row).some(v => v.length > 0)); // skip empty rows
+    }
+
+    function getId(row) {
+      for (const key of Object.keys(row)) {
+        if (key.trim().toLowerCase() === 'id') {
+          const v = row[key];
+          if (v !== null && v !== undefined && String(v).length > 0) return String(v);
+        }
+      }
+      return null;
+    }
+
+    function getColumn(row, candidates) {
+      const lower = candidates.map(c => c.toLowerCase());
+      for (const key of Object.keys(row)) {
+        if (lower.includes(key.trim().toLowerCase())) {
+          const v = row[key];
+          if (v !== null && v !== undefined && String(v).length > 0) return String(v);
+        }
+      }
+      return null;
+    }
+
+    function parseColor(str) {
+      if (!str) return null;
+      const s = String(str).trim().replace(/^#/, '');
+      if (/^[0-9a-fA-F]{6}$/.test(s)) return parseInt(s, 16);
+      if (/^[0-9a-fA-F]{3}$/.test(s)) {
+        const r = s[0]+s[0], g = s[1]+s[1], b = s[2]+s[2];
+        return parseInt(r+g+b, 16);
+      }
+      return null;
+    }
+
+    // ─── circles state ────────────────────────────────────────────
+    const circles = [];
+
+    function clearCircles() {
+      for (const c of circles) {
+        scene.remove(c);
+        c.material.dispose();
+      }
+      circles.length = 0;
+    }
+
+    function buildCircles(rows) {
+      clearCircles();
+
+      const items = rows
+        .map((row, i) => {
+          const id = getId(row);
+          if (!id) return null;
+          const url = getColumn(row, ['URL', 'Url', 'url', 'Link', 'link', 'href', 'page'])
+                   ?? (BASE_URL + (BASE_URL === '#' ? id : encodeURIComponent(id)));
+          const customColor = parseColor(getColumn(row, ['Color', 'color', 'colour', 'Colour']));
+          const color = customColor ?? PALETTE[i % PALETTE.length];
+          const audio = getColumn(row, ['Audio', 'audio', 'AUDIO', 'mp3', 'Sound', 'sound']);
+          return { id, url, color, audio };
+        })
+        .filter(Boolean);
+
+      if (items.length === 0) {
+        showError('No rows with an ID column were found in the response.');
+        return 0;
+      }
+
+      // Spatial distribution scales with item count for nice density
+      const spread = Math.max(36, Math.min(80, 30 + items.length * 0.6));
+      const verticalSpread = spread * 0.62;
+
+      items.forEach((item) => {
+        const mat = makeCircleMaterial(item.color);
+        const mesh = new THREE.Mesh(circleGeom, mat);
+
+        const radius = 0.5 + Math.pow(Math.random(), 2.2) * 3.0;
+        mesh.scale.setScalar(radius);
+
+        mesh.position.set(
+          (Math.random() - 0.5) * spread,
+          (Math.random() - 0.5) * verticalSpread,
+          (Math.random() - 0.5) * 40 - 5
+        );
+
+        mesh.userData = {
+          baseX: mesh.position.x,
+          baseY: mesh.position.y,
+          baseZ: mesh.position.z,
+          phaseX: Math.random() * Math.PI * 2,
+          phaseY: Math.random() * Math.PI * 2,
+          speed: 0.15 + Math.random() * 0.35,
+          ampX: 0.5 + Math.random() * 1.5,
+          ampY: 0.4 + Math.random() * 1.2,
+          radius,
+          hover: 0,
+          type: { color: item.color, label: item.id, url: item.url, audio: item.audio },
+        };
+
+        scene.add(mesh);
+        circles.push(mesh);
+      });
+
+      return items.length;
+    }
+
+    // ─── fetch from spreadsheet ───────────────────────────────────
+    const statusBadge = document.getElementById('status-badge');
+    const statusText = document.getElementById('status-text');
+    const countEl = document.getElementById('count');
+    const errorToast = document.getElementById('error-toast');
+    const errorMsg = document.getElementById('error-msg');
+
+    function setStatus(state, text) {
+      statusBadge.classList.remove('error', 'success');
+      if (state === 'error') statusBadge.classList.add('error');
+      if (state === 'success') statusBadge.classList.add('success');
+      statusText.textContent = text;
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorToast.classList.add('show');
+    }
+
+    function hideError() {
+      errorToast.classList.remove('show');
+    }
+
+    async function loadFromSheet() {
+      hideError();
+      setStatus('loading', 'Fetching data…');
+      countEl.textContent = '— items';
+
+      try {
+        const url = SHEET_URL + (SHEET_URL.includes('?') ? '&' : '?') + 'tab=' + encodeURIComponent(TAB_NAME);
+        const content = await jsonp(url, 'callback');
+        const rows = parseTSV(content);
+        const n = buildCircles(rows);
+
+        if (n > 0) {
+          setStatus('success', `${n} items · live`);
+          countEl.textContent = `${n} items`;
+        } else {
+          setStatus('error', 'No items loaded');
+          showError('No rows with an "ID" column were found. Check that your sheet has a header row containing "ID" and that TAB_NAME matches the tab name.');
+          countEl.textContent = '0 items';
+        }
+      } catch (err) {
+        console.error('Sheet fetch failed:', err);
+        setStatus('error', 'Fetch failed');
+        showError(err.message || String(err));
+      }
+    }
+
+    document.getElementById('retry-btn').addEventListener('click', loadFromSheet);
+
+    // ─── raycasting for hover/click ───────────────────────────────
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    // Fixed pointer at screen center, used for the mobile crosshair raycast.
+    const centerPointer = new THREE.Vector2(0, 0);
+    let hovered = null;
+
+    // Track mobile viewport — matches the existing @media (max-width: 600px)
+    // rule that hides the custom cursor. Updates live on resize/rotate.
+    const mobileMQ = window.matchMedia('(max-width: 600px)');
+    let isMobile = mobileMQ.matches;
+    mobileMQ.addEventListener('change', (e) => { isMobile = e.matches; });
+
+    const cursorEl = document.getElementById('cursor');
+    const tooltipEl = document.getElementById('tooltip');
+    const tooltipLabel = document.getElementById('tooltip-label');
+    const tooltipUrl = document.getElementById('tooltip-url');
+    const overlayEl = document.getElementById('zoom-overlay');
+
+    // Single reusable audio element — swapped src on each hover change
+    const hoverAudio = new Audio();
+    hoverAudio.preload = 'auto';
+
+    // ─── mobile autoplay unlock ───────────────────────────────────
+    // iOS Safari (and to a lesser extent Chrome mobile) requires the first
+    // .play() on an audio element to happen inside a user-gesture call
+    // stack. Our hover-change handler runs from requestAnimationFrame —
+    // detached from the touch event — so its play() gets silently rejected
+    // and no audio is heard. We "prime" the element on the first
+    // pointerdown by playing an inline silent WAV; after that, all
+    // subsequent programmatic plays on this element are allowed.
+    const SILENT_WAV = 'data:audio/wav;base64,UklGRiUAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQEAAACA';
+    let audioPrimed = false;
+    function primeAudio() {
+      if (audioPrimed) return;
+      audioPrimed = true;
+      hoverAudio.src = SILENT_WAV;
+      const p = hoverAudio.play();
+      if (p && p.catch) p.catch(() => {});
+      // Force the hover-change handler to re-fire next frame, in case a
+      // circle was already centered before the user first touched.
+      hovered = null;
+    }
+    window.addEventListener('pointerdown', primeAudio, { once: true });
+
+    function updatePointer(clientX, clientY) {
+      pointer.x = (clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -((clientY / window.innerHeight) * 2 - 1);
+      cursorEl.style.left = clientX + 'px';
+      cursorEl.style.top = clientY + 'px';
+      tooltipEl.style.left = clientX + 'px';
+      tooltipEl.style.top = clientY + 'px';
+    }
+
+    // ─── zoom transition ──────────────────────────────────────────
+    let zoomState = null;
+
+    function startZoom(circle) {
+      if (zoomState) return;
+      const ty = circle.userData.type;
+      zoomState = {
+        circle,
+        target: circle.position.clone(),
+        startCam: camera.position.clone(),
+        startTime: performance.now(),
+        duration: 950,
+        navigated: false,
+      };
+      overlayEl.style.background = '#' + ty.color.toString(16).padStart(6, '0');
+      tooltipEl.classList.remove('show');
+      cursorEl.style.opacity = '0';
+    }
+
+    function navigate(url) {
+      if (!url || url === '#') return;
+      if (OPEN_IN_NEW_TAB) window.open(url, '_blank', 'noopener,noreferrer');
+      else window.location.href = url;
+    }
+
+    function endZoom() {
+      overlayEl.style.transition = 'opacity 0.6s ease-out';
+      overlayEl.style.opacity = '0';
+      cursorEl.style.opacity = '1';
+      setTimeout(() => {
+        overlayEl.style.transition = '';
+        // restore orbital camera at its target home position
+        cam.theta = cam.targetTheta = 0;
+        cam.phi = cam.targetPhi = Math.PI / 2;
+        cam.radius = cam.targetRadius = 28;
+        zoomState = null;
+      }, 650);
+    }
+
+    // ─── orbital camera + input ───────────────────────────────────
+    // Camera orbits the origin in spherical coords (theta, phi, radius).
+    // Drag to rotate · wheel/pinch to zoom · short click on a circle still
+    // triggers the zoom-into-page transition.
+    const cam = {
+      theta: 0,                    // azimuth (around y-axis)
+      phi: Math.PI / 2,            // polar (from y-axis); π/2 = horizontal
+      radius: 28,
+      targetTheta: 0,
+      targetPhi: Math.PI / 2,
+      targetRadius: 28,
+      minRadius: 6,
+      maxRadius: 160,
+      minPhi: 0.15,                // prevent flipping over the poles
+      maxPhi: Math.PI - 0.15,
+      rotateSpeed: 0.005,
+      damping: 0.12,
+    };
+
+    // multi-pointer tracking for drag + pinch
+    const pointers = new Map(); // pointerId -> {x, y}
+    const drag = { active: false, startX: 0, startY: 0, lastX: 0, lastY: 0, startTime: 0 };
+    let lastPinchDist = null;
+    const CLICK_DIST_THRESHOLD = 5;   // px of total movement to count as drag, not click
+    const CLICK_TIME_THRESHOLD = 500; // ms
+
+    window.addEventListener('pointerdown', (e) => {
+      if (zoomState) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (pointers.size === 1) {
+        drag.active = true;
+        drag.startX = drag.lastX = e.clientX;
+        drag.startY = drag.lastY = e.clientY;
+        drag.startTime = performance.now();
+        cursorEl.classList.add('grabbing');
+      } else if (pointers.size === 2) {
+        // second finger landed — switch from orbit to pinch
+        drag.active = false;
+        cursorEl.classList.remove('grabbing');
+        const [p1, p2] = [...pointers.values()];
+        lastPinchDist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      updatePointer(e.clientX, e.clientY);
+
+      if (pointers.has(e.pointerId)) {
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      }
+
+      if (pointers.size === 2) {
+        // pinch zoom
+        const [p1, p2] = [...pointers.values()];
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        if (lastPinchDist !== null) {
+          const factor = lastPinchDist / dist;
+          cam.targetRadius = clamp(cam.targetRadius * factor, cam.minRadius, cam.maxRadius);
+        }
+        lastPinchDist = dist;
+      } else if (drag.active) {
+        // single-pointer drag rotates the camera
+        const dx = e.clientX - drag.lastX;
+        const dy = e.clientY - drag.lastY;
+        drag.lastX = e.clientX;
+        drag.lastY = e.clientY;
+        cam.targetTheta -= dx * cam.rotateSpeed;
+        cam.targetPhi = clamp(cam.targetPhi - dy * cam.rotateSpeed, cam.minPhi, cam.maxPhi);
+      }
+    });
+
+    function endDragOrClick(e) {
+      const wasActive = drag.active;
+      pointers.delete(e.pointerId);
+
+      if (pointers.size < 2) lastPinchDist = null;
+
+      if (pointers.size === 0) {
+        drag.active = false;
+        cursorEl.classList.remove('grabbing');
+
+        // If movement was small and quick, treat as a click on the hovered circle
+        if (wasActive && !zoomState) {
+          const moved = Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY);
+          const elapsed = performance.now() - drag.startTime;
+          if (moved < CLICK_DIST_THRESHOLD && elapsed < CLICK_TIME_THRESHOLD) {
+            // do a fresh raycast at release point (especially for touch)
+            updatePointer(e.clientX, e.clientY);
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(circles);
+            if (hits.length > 0) startZoom(hits[0].object);
+          }
+        }
+      }
+    }
+    window.addEventListener('pointerup', endDragOrClick);
+    window.addEventListener('pointercancel', endDragOrClick);
+
+    // wheel = zoom
+    window.addEventListener('wheel', (e) => {
+      if (zoomState) return;
+      e.preventDefault();
+      // exponential zoom so it feels equally fast at any distance
+      const factor = Math.exp(e.deltaY * 0.001);
+      cam.targetRadius = clamp(cam.targetRadius * factor, cam.minRadius, cam.maxRadius);
+    }, { passive: false });
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    // ─── center view: frame every circle ──────────────────────────
+    function centerView() {
+      if (circles.length === 0) return;
+
+      // Smallest sphere at origin that contains every circle (incl. its visual radius)
+      let maxDist = 0;
+      for (const c of circles) {
+        const u = c.userData;
+        const d = Math.hypot(u.baseX, u.baseY, u.baseZ) + u.radius;
+        if (d > maxDist) maxDist = d;
+      }
+
+      // Distance the camera needs so the bounding sphere fits both axes of the frustum
+      const vFOV = camera.fov * Math.PI / 180;
+      const hFOV = 2 * Math.atan(Math.tan(vFOV / 2) * camera.aspect);
+      const limit = Math.min(vFOV, hFOV) / 2;
+      const fitDist = maxDist / Math.sin(limit);
+
+      cam.targetTheta = 0;
+      cam.targetPhi = Math.PI / 2;
+      cam.targetRadius = clamp(fitDist * 1.18, cam.minRadius, cam.maxRadius);
+    }
+    document.getElementById('center-btn').addEventListener('click', centerView);
+
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+      document.getElementById('dim').textContent = `${w} × ${h}`;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // ─── render loop ──────────────────────────────────────────────
+    let last = performance.now();
+    let fpsSmooth = 60;
+    let fpsUpdateCount = 0;
+    const fpsEl = document.getElementById('fps');
+
+    function animate(now) {
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      const t = now * 0.001;
+
+      // zoom transition takes over the frame
+      if (zoomState) {
+        const elapsed = now - zoomState.startTime;
+        const progress = Math.min(elapsed / zoomState.duration, 1);
+        const eased = progress * progress * progress;
+
+        const tgt = zoomState.target;
+        const sc = zoomState.startCam;
+        const endZ = tgt.z + 0.3;
+
+        camera.position.x = sc.x + (tgt.x - sc.x) * eased;
+        camera.position.y = sc.y + (tgt.y - sc.y) * eased;
+        camera.position.z = sc.z + (endZ - sc.z) * eased;
+        camera.lookAt(tgt);
+
+        const fadeStart = 0.55;
+        const fadeProgress = Math.max(0, (progress - fadeStart) / (1 - fadeStart));
+        overlayEl.style.opacity = fadeProgress;
+
+        for (const c of circles) c.quaternion.copy(camera.quaternion);
+        renderer.render(scene, camera);
+
+        if (progress >= 1 && !zoomState.navigated) {
+          zoomState.navigated = true;
+          navigate(zoomState.circle.userData.type.url);
+          if (OPEN_IN_NEW_TAB) endZoom();
+        }
+
+        requestAnimationFrame(animate);
+        return;
+      }
+
+      // normal frame — gentle auto-rotate when user isn't holding the camera
+      // 0.012 rad/sec ≈ one full revolution every ~8.7 minutes
+      if (!drag.active) {
+        const inc = 0.012 * dt;
+        cam.theta += inc;
+        cam.targetTheta += inc;
+      }
+
+      // update orbital camera from spherical coords (with damping)
+      cam.theta += (cam.targetTheta - cam.theta) * cam.damping;
+      cam.phi   += (cam.targetPhi   - cam.phi)   * cam.damping;
+      cam.radius += (cam.targetRadius - cam.radius) * cam.damping;
+
+      const sinPhi = Math.sin(cam.phi);
+      camera.position.x = cam.radius * sinPhi * Math.sin(cam.theta);
+      camera.position.y = cam.radius * Math.cos(cam.phi);
+      camera.position.z = cam.radius * sinPhi * Math.cos(cam.theta);
+      camera.lookAt(0, 0, 0);
+
+      for (const c of circles) {
+        const u = c.userData;
+        c.position.x = u.baseX + Math.sin(t * u.speed + u.phaseX) * u.ampX;
+        c.position.y = u.baseY + Math.cos(t * u.speed * 0.8 + u.phaseY) * u.ampY;
+
+        const targetHover = (c === hovered) ? 1 : 0;
+        u.hover += (targetHover - u.hover) * 0.12;
+        c.material.uniforms.uHover.value = u.hover;
+
+        let s = u.radius;
+        if (u.radius > 1.5) s *= 1 + Math.sin(t * 0.6 + u.phaseX) * 0.04;
+        s *= 1 + u.hover * 0.25;
+        c.scale.setScalar(s);
+
+        c.quaternion.copy(camera.quaternion);
+      }
+
+      // raycast for hover.
+      //   desktop → use the cursor position; skip while rotating so circles
+      //             flying past the cursor don't thrash the tooltip.
+      //   mobile  → use a fixed center pointer (the crosshair). Drag rotates
+      //             the world, sweeping circles past it; whichever one is at
+      //             center is the "hovered" one and triggers its audio.
+      let newHover;
+      if (isMobile) {
+        raycaster.setFromCamera(centerPointer, camera);
+        const hits = raycaster.intersectObjects(circles);
+        newHover = hits.length > 0 ? hits[0].object : null;
+      } else {
+        newHover = drag.active ? null : (() => {
+          raycaster.setFromCamera(pointer, camera);
+          const hits = raycaster.intersectObjects(circles);
+          return hits.length > 0 ? hits[0].object : null;
+        })();
+      }
+
+      if (newHover !== hovered) {
+        hovered = newHover;
+        if (hovered) {
+          const ty = hovered.userData.type;
+          tooltipLabel.textContent = ty.label;
+          tooltipUrl.textContent = ty.url;
+          tooltipEl.classList.add('show');
+          cursorEl.classList.add('hover');
+          // Play the row's audio, if any. .play() returns a promise that
+          // may reject (autoplay policy, missing file) — swallow silently.
+          if (ty.audio) {
+            try {
+              hoverAudio.src = ty.audio;
+              hoverAudio.currentTime = 0;
+              const p = hoverAudio.play();
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            } catch (e) { /* ignore */ }
+          } else {
+            hoverAudio.pause();
+          }
+        } else {
+          tooltipEl.classList.remove('show');
+          cursorEl.classList.remove('hover');
+          hoverAudio.pause();
+        }
+      }
+
+      fpsSmooth = fpsSmooth * 0.95 + (1 / dt) * 0.05;
+      fpsUpdateCount++;
+      if (fpsUpdateCount % 15 === 0) fpsEl.textContent = `${Math.round(fpsSmooth)} fps`;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Kick off the fetch
+    document.getElementById('tab').textContent = 'tab: ' + TAB_NAME;
+    loadFromSheet();
+  </script>
+</body>
+</html>
